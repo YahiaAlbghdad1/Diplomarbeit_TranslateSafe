@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace ScreenTranslatorApp.Services
+namespace TranslateSafe.Services
 {
     public interface ITranslationService
     {
@@ -9,17 +9,16 @@ namespace ScreenTranslatorApp.Services
 
     public class TranslationService : ITranslationService
     {
-        // HIER KOMMT SPÄTER DER API-CODE (z.B. DeepL, Google Translate)
-
-        // Aktuell nur ein Platzhalter zur Demonstration
+        // HIER: Später kommt die DeepL/Google API-Logik hinein
         public async Task<string> TranslateAsync(string text, string targetLang)
         {
-            await Task.Delay(500); // Simuliert die Wartezeit auf die API
+            await Task.Delay(500); // Simuliert API-Aufruf
 
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
 
-            return $"[Übersetzung in {targetLang} von: {text}]";
+            // Dummy-Implementierung:
+            return $"[[Übersetzt von der API in {targetLang}: {text}]]";
         }
     }
 }

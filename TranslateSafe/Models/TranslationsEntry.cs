@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ScreenTranslatorApp.Models
+namespace TranslateSafe.Models
 {
     public class TranslationEntry
     {
@@ -8,10 +8,10 @@ namespace ScreenTranslatorApp.Models
         public int Id { get; set; }
 
         // Der vom Benutzer markierte Originaltext
-        public string OriginalText { get; set; }
+        public required string OriginalText { get; set; }
 
         // Die erhaltene Übersetzung
-        public string TranslatedText { get; set; }
+        public required string TranslatedText { get; set; }
 
         // Die Quellsprache des Originaltextes
         public string SourceLanguage { get; set; }

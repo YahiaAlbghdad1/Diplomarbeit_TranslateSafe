@@ -1,27 +1,70 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using ScreenTranslatorApp.Services;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using TranslateSafe.Data;
+using TranslateSafe.Services;
+using TranslateSafe.Views;
+using TranslateSafe.ViewModels;
+using System;
 using System.Windows;
+using System.Threading.Tasks;
 
-namespace TranslateSafe // HIER IST IHR PROJEKTNAME (NAMESPACE)
+namespace TranslateSafe
 {
-    public partial class App : Application
+    public partial class App : System.Windows.Application // Fully qualified to resolve ambiguity
     {
-        // ... (Der restliche Code bleibt, nur die using-Anweisungen wurden korrigiert) ...
+        private readonly IHost _host;
+
+        public App()
+        {
+            _host = Host.CreateDefaultBuilder()
+                .ConfigureServices(ConfigureServices)
+                .Build();
+        }
 
         private void ConfigureServices(IServiceCollection services)
         {
-            // 1. REGISTRIERUNG DER DATENBANK
+            // Datenbank und EF Core
             services.AddDbContext<AppDbContext>();
 
-            // 2. REGISTRIERUNG DER SERVICES
+            // Services
             services.AddSingleton<ITranslationService, TranslationService>();
             services.AddSingleton<ISystemIntegrationService, SystemIntegrationService>();
 
-            // 3. REGISTRIERUNG DER VIEWS und VIEWMODELS
+            // Views und ViewModels
             services.AddSingleton<MainWindow>();
             services.AddTransient<MainViewModel>();
         }
 
-        // ... (restliche Methoden OnStartup und OnExit bleiben gleich) ...
+        protected override async void OnStartup(StartupEventArgs e)
+        {
+            await _host.StartAsync();
+
+            // Datenbankmigration durchführen
+            using (var scope = _host.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await dbContext.Database.MigrateAsync();
+            }
+
+            // Hauptfenster anzeigen
+            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            mainWindow.Show();
+
+            base.OnStartup(e);
+        }
+
+        protected override async void OnExit(ExitEventArgs e)
+        {
+            using (_host)
+            {
+                // Dienste aufräumen
+                var systemIntegrationService = _host.Services.GetRequiredService<ISystemIntegrationService>();
+                systemIntegrationService.Cleanup();
+
+                await _host.StopAsync(TimeSpan.FromSeconds(5));
+            }
+            base.OnExit(e);
+        }
     }
 }
