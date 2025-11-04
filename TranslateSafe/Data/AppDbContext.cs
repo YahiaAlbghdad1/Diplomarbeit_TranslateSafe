@@ -12,6 +12,7 @@ namespace TranslateSafe.Data
         {
             string dbPath = Path.Combine(Directory.GetCurrentDirectory(), "translations.db");
             optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            //ts4life
         }
     }
 }
