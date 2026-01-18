@@ -1,0 +1,7 @@
+{
+  "name": "TranslateSafe",
+  "description": "A powerful AI-powered translation application featuring text, image, and voice translation, complete with a flashcard study system.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

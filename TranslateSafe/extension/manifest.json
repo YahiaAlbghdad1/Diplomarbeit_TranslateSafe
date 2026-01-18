@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "TranslateSafe Assistant",
+  "version": "2.2",
+  "description": "Auto-translate selected text and sync to flashcards.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["text_selection.js"],
+      "css": ["selection.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TranslateSafe"
+  },
+  "commands": {
+    "toggle_mode": {
+      "suggested_key": {
+        "default": "Ctrl+Q",
+        "mac": "Command+Q"
+      },
+      "description": "Toggle Instant Translation Mode"
+    }
+  }
+}
