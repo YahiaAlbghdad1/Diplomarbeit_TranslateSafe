@@ -4,14 +4,14 @@ import { LOCAL_STORAGE_KEY, SUPPORTED_LANGUAGES } from './constants';
 import { validateApiKey } from './services/geminiService';
 import TranslationView from './components/TranslationView';
 import FlashcardsView from './components/FlashcardsView';
-import { Sparkles, Library, Globe2, AlertTriangle } from 'lucide-react';
+import { Sparkles, Library, Globe2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.TRANSLATE);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [hasApiKey, setHasApiKey] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
-  const [targetLang, setTargetLang] = useState(SUPPORTED_LANGUAGES[0]);
+  const [targetLang, setTargetLang] = useState('English');
 
   // @ts-ignore
   const envApiKey = process.env.API_KEY;
@@ -107,7 +107,7 @@ const App: React.FC = () => {
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg shadow-lg shadow-indigo-500/20">
-                    <Sparkles className="w-5 h-5 text-white" />
+                    <ShieldCheck className="w-6 h-6 text-white" />
                 </div>
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 hidden sm:block">TranslateSafe</h1>
             </div>
