@@ -43,52 +43,30 @@ chrome.storage.onChanged.addListener((changes, area) => {
     }
 });
 
-// 3. Process Save Queue (Extension -> App Database)
+// 3. Process Save Queue (Extension -> App)
+// Dispatches a custom event directly on window so the React app can save via Supabase
+// using its existing auth session — no backend endpoint needed.
 function processQueue() {
-  chrome.storage.local.get(['saveQueue'], async (res) => {
+  chrome.storage.local.get(['saveQueue'], (res) => {
     const queue = res.saveQueue || [];
-    if (queue.length > 0) {
-      console.log(`Processing ${queue.length} saved flashcards...`);
-      
-      let successCount = 0;
+    if (queue.length === 0) return;
 
-      for (const item of queue) {
-        const newCard = {
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
+    console.log(`LinguaGemini: processing ${queue.length} queued flashcard(s)...`);
+
+    for (const item of queue) {
+      window.dispatchEvent(new CustomEvent('lingua-gemini-save-flashcard', {
+        detail: {
           original: item.original,
           translated: item.translated,
-          sourceLang: 'Auto',
-          targetLang: item.targetLang
-        };
-
-        try {
-          const response = await fetch('/api/flashcards', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(newCard),
-          });
-
-          if (response.ok) {
-            successCount++;
-          } else {
-            console.error('Failed to save flashcard to API', await response.text());
-          }
-        } catch (error) {
-          console.error('Error saving flashcard to API', error);
+          sourceLang: item.sourceLang || 'Auto',
+          targetLang: item.targetLang,
         }
-      }
-
-      if (successCount > 0) {
-        // Clear queue
-        chrome.storage.local.set({ saveQueue: [] });
-
-        // Notify App to reload
-        window.dispatchEvent(new Event('lingua-gemini-update'));
-      }
+      }));
     }
+
+    // Clear queue and notify app to refresh its list
+    chrome.storage.local.set({ saveQueue: [] });
+    window.dispatchEvent(new Event('lingua-gemini-update'));
   });
 }
 

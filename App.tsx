@@ -11,7 +11,8 @@ import HistoryView from './components/HistoryView';
 import AuthView from './components/AuthView';
 import TeacherView from './components/teacher/TeacherView';
 import StudentView from './components/student/StudentView';
-import { Library, Globe2, AlertTriangle, ShieldCheck, Clock, LogOut, School, GraduationCap } from 'lucide-react';
+import { Library, Globe2, AlertTriangle, ShieldCheck, Clock, LogOut, School, GraduationCap, Puzzle } from 'lucide-react';
+import ExtensionView from './components/ExtensionView';
 
 // Map Supabase snake_case rows → TS camelCase interfaces
 const toFlashcard = (row: any): Flashcard => ({
@@ -77,6 +78,20 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle flashcard save arriving from the bookmarklet via ?ts_save= URL param
+  useEffect(() => {
+    if (!session) return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('ts_save');
+    if (!raw) return;
+    try {
+      const card = JSON.parse(decodeURIComponent(raw));
+      saveFlashcard(card);
+      showNotification('Flashcard saved from Bookmarklet!');
+    } catch { /* malformed param — ignore */ }
+    window.history.replaceState({}, '', window.location.pathname);
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load data whenever session changes (login/logout)
   useEffect(() => {
     if (!session) {
@@ -104,13 +119,18 @@ const App: React.FC = () => {
     const handleConfigUpdate = (e: CustomEvent) => {
       if (e.detail?.targetLang) setTargetLang(e.detail.targetLang);
     };
+    const handleExtensionSave = (e: CustomEvent) => {
+      if (e.detail) saveFlashcard(e.detail);
+    };
 
     window.addEventListener('lingua-gemini-update', handleExternalUpdate);
     window.addEventListener('lingua-gemini-config-update', handleConfigUpdate as EventListener);
+    window.addEventListener('lingua-gemini-save-flashcard', handleExtensionSave as EventListener);
 
     return () => {
       window.removeEventListener('lingua-gemini-update', handleExternalUpdate);
       window.removeEventListener('lingua-gemini-config-update', handleConfigUpdate as EventListener);
+      window.removeEventListener('lingua-gemini-save-flashcard', handleExtensionSave as EventListener);
     };
   }, [session]);
 
@@ -299,6 +319,7 @@ const App: React.FC = () => {
     { tab: AppTab.TRANSLATE,  label: 'Translate',  icon: <Globe2         className="w-4 h-4" /> },
     { tab: AppTab.FLASHCARDS, label: 'Flashcards', icon: <Library        className="w-4 h-4" />, badge: flashcards.length },
     { tab: AppTab.HISTORY,    label: 'History',    icon: <Clock          className="w-4 h-4" />, badge: history.length },
+    { tab: AppTab.EXTENSION,  label: 'Browser',    icon: <Puzzle         className="w-4 h-4" /> },
     ...(profile?.role === 'teacher'
       ? [{ tab: AppTab.TEACHER,  label: 'Teaching',  icon: <School        className="w-4 h-4" /> }]
       : []),
@@ -402,6 +423,14 @@ const App: React.FC = () => {
               history={history}
               onDeleteEntry={deleteHistoryEntry}
               onSaveAsFlashcard={saveFlashcard}
+            />
+          )}
+          {activeTab === AppTab.EXTENSION && (
+            <ExtensionView
+              apiKey={envApiKey || ''}
+              targetLang={targetLang}
+              accessToken={session?.access_token ?? ''}
+              userId={session?.user.id ?? ''}
             />
           )}
           {activeTab === AppTab.TEACHER && session && (
